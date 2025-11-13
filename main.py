@@ -14,6 +14,7 @@ import sys
 import cv2
 import os
 
+adfkjaldkj
 
 user_id = sys.argv[1]
 set_config(user_id)
