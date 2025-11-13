@@ -1,0 +1,17 @@
+[
+  {
+    "name": "mahindra_logistics",
+    "user_id": 1,
+    "config_path": "configs/mahindra_logistics.yaml"
+  },
+  {
+    "name": "marico_inventory",
+    "user_id": 2,
+    "config_path": "configs/marico_inventory.yaml"
+  },
+  {
+    "name": "dhl_inventory",
+    "user_id": 3,
+    "config_path": "configs/dhl_inventory.yaml"
+  }
+]

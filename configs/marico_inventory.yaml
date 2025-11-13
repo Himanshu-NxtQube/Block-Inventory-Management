@@ -1,0 +1,45 @@
+models:
+  container_model: "./models/Marico_Pallet.pt"
+  pallet_status_model: "./models/new pallet status model.pt"
+  box_model: "./models/Marico Box Detection.pt"
+  boundary_model: "./models/new_blue_orange_bar.pt"
+
+bars:
+  vertical: 0
+  horizontal: 1
+
+rack_infer_func:
+  path: "package/infer functions/marico_infer_func.py"
+
+# pattern:
+#   rack_id: '^[A-Z]{2}[-\s]?[0-9]{3}$'
+
+rack_id:
+  pattern: '^([A-R])L([1-6])(\d{2})$'
+  expected_length: 5
+
+input:
+  image_dir: "./testing images/images/marico"
+  stack_levels_csv: "./inventory data/marico_inventory_stack_levels.csv"
+
+thresholds:
+  boundary_model:
+    confidence_threshold: 0.5
+    merge_threshold: 50
+
+  box_model:
+    confidence_threshold: 0.2
+  
+  ocr_threshold:
+    area_threshold: 3000
+  
+  container_model:
+    confidence_threshold: 0.7
+    distance_threshold: 200
+
+unique_id:
+  area: 250
+
+extras: ['pallet_status']
+
+nomenclature: 'pallets'

@@ -1,0 +1,11 @@
+
+input:
+  image_dir: "./testing images/images/mahindra"
+
+# pattern:
+#   rack_id: "^HD-(\\d{2})/([A-Z])/((0[1-9])|(1[0-9])|(2[0-9])|(3[0-8]))$"
+
+unique_id:
+  area: 1000
+
+nomenclature: 'boxes'

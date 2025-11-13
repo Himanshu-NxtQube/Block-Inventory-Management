@@ -1,0 +1,13 @@
+input:
+  debug_image_dir: "./testing images/debug/"
+
+google_vision_client:
+  credentials : "./models/GoogleVisionCredential.json"
+
+# pattern:
+#   unique_id: "^@([A-Z]{2}\\d{4})$"
+
+unique_id:
+  pattern: "^[QGD@]([A-Z]{2}\\d{4})$"
+
+extras: []

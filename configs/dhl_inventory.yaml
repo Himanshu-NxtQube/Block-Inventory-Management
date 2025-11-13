@@ -1,0 +1,43 @@
+models:
+  boundary_model: "./models/boundary_model_dhl.pt"
+  container_model: "./models/pallet_model_01.pt"
+  pallet_status_model: "./models/pallet_status_model1.pt"
+
+bars:
+  vertical: 1
+  horizontal: 0
+
+# pattern:
+#   rack_id: '^R[A-Z]-\d{2}-[B-Z]$'
+
+rack_infer_func:
+  path: "package/infer functions/dhl_infer_func.py"
+
+rack_id:
+  pattern: '^R[A-Z]-\d{2}-[B-Z]$'
+  expected_length: 7
+
+input:
+  image_dir: "./testing images/images/DHL"
+  
+
+thresholds:
+  boundary_model:
+    confidence_threshold: 0.5
+    merge_threshold: 50
+
+  container_model:
+    confidence_threshold: 0.5
+    distance_threshold: 200
+  
+  ocr_threshold:
+    area_threshold: 1000
+  
+  # pallet_model:
+  #   distance_threshold: 500
+  #   confidence_threshold: 0.2
+
+unique_id:
+  area: 250
+
+nomenclature: 'pallets'

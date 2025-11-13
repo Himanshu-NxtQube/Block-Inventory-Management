@@ -1,0 +1,5 @@
+inventory data/
+models/
+.env
+__pycache__/
+testing images/
