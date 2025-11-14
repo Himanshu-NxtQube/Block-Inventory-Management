@@ -51,19 +51,18 @@ def process_single_image(image_path, report_id):
     image = cv2.imread(image_path)
     rotation = 0
 
+    annotations = ocr_client.get_annotations(image.copy())
+    if is_location(annotations):
+        curr_location = parser.get_location(annotations)
+        print(f"{curr_location=}")
+        return
+
     while not matching_unique_id and rotation < 360:
-        annotations = ocr_client.get_annotations(image.copy())
-        
-        if is_location(annotations):
-            curr_location = parser.get_location(annotations)
-            print(f"{curr_location=}")
-            return
-        else:
-            nearest_box = box_util.get_nearest_box(image_path, image.copy(), rotation, debug)
-            unique_ids = parser.get_unique_ids(annotations)
-            matching_unique_id = box_util.find_unique_id(unique_ids, nearest_box)
-            image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
-            rotation += 90
+        nearest_box = box_util.get_nearest_box(image_path, image.copy(), rotation, debug)
+        unique_ids = parser.get_unique_ids(annotations)
+        matching_unique_id = box_util.find_unique_id(unique_ids, nearest_box)
+        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+        rotation += 90
 
     print(rotation - 90, matching_unique_id)
     

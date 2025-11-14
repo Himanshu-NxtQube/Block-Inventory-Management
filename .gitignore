@@ -6,3 +6,4 @@ testing images/
 .history/
 bucket/
 output/
+*.png

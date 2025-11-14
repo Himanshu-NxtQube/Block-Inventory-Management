@@ -22,5 +22,8 @@ class OCRClient:
 
 if __name__ == '__main__':
     ocr_client = OCRClient()
-    annotations = ocr_client.get_annotations('annotations.png', rotate=90)
-    print(annotations)
+    image = cv2.imread('testing images/images/mahindra/DJI_0861.JPG')
+    image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    annotations = ocr_client.get_annotations(image)
+    for annotation in annotations:
+        print(annotation.description)
