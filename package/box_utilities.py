@@ -171,9 +171,9 @@ class BoxUtilities:
                 else:
                     continue  # skip invalid boxes
 
-            result = cv2.pointPolygonTest(nearest_box, (cx, cy), False)
-            if result >= 0:
-                sticker_count += 1 
+                result = cv2.pointPolygonTest(nearest_box, (cx, cy), False)
+                if result >= 0:
+                    sticker_count += 1 
 
         return sticker_count
         

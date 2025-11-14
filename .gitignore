@@ -4,3 +4,5 @@ models/
 __pycache__/
 testing images/
 .history/
+bucket/
+output/

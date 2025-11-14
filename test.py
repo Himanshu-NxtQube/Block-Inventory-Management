@@ -44,7 +44,7 @@ def process_single_image(image_path, report_id):
     global curr_location
     image_name = image_path.split('/')[-1]
     print("Processing: ", image_name)
-    image_obj_key_id = rds_operator.store_img_info(image_path, conn)
+    # image_obj_key_id = rds_operator.store_img_info(image_path, conn)
 
     #matching_unique_ids = set()
     matching_unique_id = None
@@ -78,15 +78,18 @@ def process_single_image(image_path, report_id):
     result = build_result(image_name, record, stack_count, curr_location, sticker_count)
     print(json.dumps(result, indent=4))
 
-    rds_operator.store_data_to_RDS(conn, result, image_obj_key_id, user_id, report_id)
+    # rds_operator.store_data_to_RDS(conn, result, image_obj_key_id, user_id, report_id)
 
 
 
 if __name__ == "__main__":
-    image_dir = CONFIG['input']['image_dir']
+    if debug:
+        image_dir = CONFIG['input']['debug_image_dir']
+    else:
+        image_dir = CONFIG['input']['debug_image_dir']
     images = sorted(os.listdir(image_dir))
     report_id = 0
-    report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_05')
+    # report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_05')
     
     for image in images:
         full_image_path = os.path.join(image_dir, image)

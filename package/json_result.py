@@ -41,7 +41,7 @@ def build_result(image_name, record, stack_count, curr_location, sticker_count):
         tmp['BOXNUMBER'] = record['box_number']
         tmp['BOXQUANTITY'] = record['box_quantity']
         tmp['PARTNUMBER'] = record['part_number']
-        tmp['STACKCOUNT'] = stack_count if stack_count > 0 else None
+        tmp['STACKCOUNT'] = stack_count if stack_count and stack_count > 0 else None
         tmp['INVOICE_NUMBER'] = record['invoice_number']
 
     final_output.append(tmp)
