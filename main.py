@@ -44,9 +44,10 @@ def process_single_image(image_path, report_id):
     global curr_location
     image_name = image_path.split('/')[-1]
     print("Processing: ", image_name)
-    image_obj_key_id = rds_operator.store_img_info(image_path, conn)
+    # image_obj_key_id = rds_operator.store_img_info(image_path, conn)
 
     #matching_unique_ids = set()
+    nearest_box = None
     matching_unique_id = None
     image = cv2.imread(image_path)
     rotation = 0
@@ -59,8 +60,17 @@ def process_single_image(image_path, report_id):
 
     while not matching_unique_id and rotation < 360:
         nearest_box = box_util.get_nearest_box(image_path, image.copy(), rotation, debug)
+        if nearest_box is not None:
+            cropped_img = box_util.crop_rotated_box(image_path, image.copy(), nearest_box)
+            annotations = ocr_client.get_annotations(cropped_img)
+        else:
+            annotations = None
+            print("Alert: No box detected!")
+
         unique_ids = parser.get_unique_ids(annotations)
-        matching_unique_id = box_util.find_unique_id(unique_ids, nearest_box)
+        print(unique_ids)
+        # matching_unique_id = box_util.find_unique_id(unique_ids, nearest_box)
+        matching_unique_id = unique_ids[0][0] if unique_ids else None
         image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
         rotation += 90
 
@@ -77,7 +87,7 @@ def process_single_image(image_path, report_id):
     result = build_result(image_name, record, stack_count, curr_location, sticker_count)
     print(json.dumps(result, indent=4))
 
-    rds_operator.store_data_to_RDS(conn, result, image_obj_key_id, user_id, report_id)
+    # rds_operator.store_data_to_RDS(conn, result, image_obj_key_id, user_id, report_id)
 
 
 
@@ -85,7 +95,7 @@ if __name__ == "__main__":
     image_dir = CONFIG['input']['image_dir']
     images = sorted(os.listdir(image_dir))
     report_id = 0
-    report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_05')
+    # report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_05')
     
     for image in images:
         full_image_path = os.path.join(image_dir, image)

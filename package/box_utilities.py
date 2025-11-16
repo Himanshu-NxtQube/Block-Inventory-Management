@@ -132,6 +132,49 @@ class BoxUtilities:
             plt.imsave(f"output/{os.path.basename(image_path).split('.')[0]}_{rotation}.JPG", image_rgb)
         
         return nearest_box
+    
+    def crop_rotated_box(self, image_path, image, box_pts):
+        # box_pts → (4,1,2) → convert to (4,2)
+        pts = box_pts.reshape(4, 2).astype("float32")
+
+        # Order points (optional but safer)
+        # Find top-left, top-right, bottom-right, bottom-left
+        rect = np.zeros((4, 2), dtype="float32")
+        s = pts.sum(axis=1)
+        rect[0] = pts[np.argmin(s)]   # top-left
+        rect[2] = pts[np.argmax(s)]   # bottom-right
+
+        diff = np.diff(pts, axis=1)
+        rect[1] = pts[np.argmin(diff)]  # top-right
+        rect[3] = pts[np.argmax(diff)]  # bottom-left
+
+        (tl, tr, br, bl) = rect
+
+        # Compute width and height
+        widthA = np.linalg.norm(br - bl)
+        widthB = np.linalg.norm(tr - tl)
+        maxWidth = int(max(widthA, widthB))
+
+        heightA = np.linalg.norm(tr - br)
+        heightB = np.linalg.norm(tl - bl)
+        maxHeight = int(max(heightA, heightB))
+
+        # Destination points for warp
+        dst = np.array([
+            [0, 0],
+            [maxWidth - 1, 0],
+            [maxWidth - 1, maxHeight - 1],
+            [0, maxHeight - 1]
+        ], dtype="float32")
+
+        # Compute perspective transform
+        M = cv2.getPerspectiveTransform(rect, dst)
+        warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
+
+        cv2.imwrite(f'output/cropped_box_{os.path.basename(image_path).split(".")[0]}.jpg', warped)
+
+        return warped
+
             
     def calculate_area(self, pts: np.ndarray) -> float:
         """Calculate area of a polygon from its corner points."""

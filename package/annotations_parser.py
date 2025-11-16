@@ -39,9 +39,14 @@ class AnnotationsParser:
             text = annotation.description
             coord = get_center(annotation.bounding_poly)
 
+            # print('->', text)
+
             # fix l → I and 1 → I
             if len(text)==6 and (text[1]=='l' or text[1]=='1'): text = text[0] + 'I' + text[2:]
             elif len(text)==7 and (text[2]=='l' or text[1]=='1'): text = text[:2] + 'I' + text[3:]
+
+
+            # print('|--', text)
 
             if text == '@':
                 is_at = True
@@ -59,6 +64,7 @@ class AnnotationsParser:
                         coord = ((at_coord[0]+coord[0])/2, (at_coord[1]+coord[1])/2)
                     else:
                         coord = at_coord or coord
+                    # print('|->', combined)
                     unique_ids.append((combined, coord))
                 is_at = False
 
