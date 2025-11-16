@@ -3,10 +3,11 @@ import cv2
 import matplotlib.pyplot as plt
 
 # Load model
-model = YOLO("models/block_sticker.pt")
+model = YOLO("models/sticker_block_latest.pt")
+# model = YOLO("models/block_box_")
 
 # Read image
-image_path = "testing images/debug/DJI_0057.JPG"
+image_path = "output/DJI_0863_0.JPG"
 image = cv2.imread(image_path)
 
 # Run inference

@@ -9,7 +9,7 @@ from shapely.geometry import Polygon
 
 class BoxUtilities:
     def __init__(self):
-        self.box_model = YOLO('models/block_box_latesssssssssstttttt.pt')
+        self.box_model = YOLO('models/block_box_latestIMP1.pt')
         self.stack_count_csv = pd.read_csv('inventory data/block_main_csv.csv', index_col='Part number')
         self.stack_count_csv = self.stack_count_csv[~self.stack_count_csv.index.duplicated(keep='first')]
         self.sticker_model = YOLO('models/sticker_block_latest.pt')
@@ -104,7 +104,8 @@ class BoxUtilities:
 
             for corners, conf, cls in zip(boxes, confs, classes):
                 pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
-                
+                if conf < 0.7:
+                    continue
                 # Calculate centroid of the bounding box
                 M = cv2.moments(pts)
                 if M["m00"] != 0:
@@ -200,54 +201,44 @@ class BoxUtilities:
 
 
 
-    def polygon_iou(self,poly1_pts, poly2_pts):
-        """Compute IoU between two oriented bounding boxes."""
-        poly1 = Polygon(poly1_pts.reshape(-1, 2))
-        poly2 = Polygon(poly2_pts.reshape(-1, 2))
-
-        if not poly1.is_valid or not poly2.is_valid:
-            return 0.0
-
-        inter = poly1.intersection(poly2).area
-        union = poly1.union(poly2).area
-
-        if union == 0:
-            return 0.0
-        return inter / union
-
-
-    def check_unique_id_count(self, image, nearest_box, matching_unique_id, iou_threshold=0.1):
+    def check_unique_id_count(self, image, nearest_box, image_path):
         preds = self.sticker_model.predict(image, verbose=False)
         sticker_count = 0
 
-        nearest_poly = np.array(nearest_box).reshape(-1, 2)
-
         for result in preds:
             boxes = result.obb.xyxyxyxy
+            confs = result.obb.conf
+            classes = result.obb.cls
 
-            for corners in boxes:
-                pts = corners.cpu().numpy().astype(int)
-                pts_poly = pts.reshape(-1, 2)
+            for corners, conf, cls in zip(boxes, confs, classes):
+                pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
+                
+                # Calculate centroid of the bounding box
+                M = cv2.moments(pts)
+                if M["m00"] != 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                else:
+                    continue  # skip invalid boxes
 
-                # ---- Apply IoU ----
-                iou = self.polygon_iou(pts_poly, nearest_poly)
-                if iou >= iou_threshold:
-                    sticker_count += 1
-
-        # ---- Draw polygons for visualization ----
+                result = cv2.pointPolygonTest(nearest_box, (cx, cy), False)
+                # print("result",result)
+                if result >= 0:
+                    sticker_count += 1 
+        
         for result in preds:
             boxes = result.obb.xyxyxyxy
-
             for corners in boxes:
                 pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
+                color = (0, 255, 0) if np.array_equal(pts, nearest_box) else (0, 0, 255)
+                cv2.polylines(image, [pts], isClosed=True, color=color, thickness=5)
 
-                iou = self.polygon_iou(pts.reshape(-1, 2), nearest_poly)
-
-                color = (0, 255, 0) if iou >= iou_threshold else (0, 0, 255)
-                cv2.polylines(image, [pts], True, color, 5)
+        # Convert and save image
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        os.makedirs("output", exist_ok=True)
+        plt.imsave(f"output/sticker_{os.path.basename(image_path).split('.')[0]}.JPG", image_rgb)
 
         return sticker_count
-
         
 
 

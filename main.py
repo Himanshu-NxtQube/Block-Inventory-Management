@@ -81,7 +81,7 @@ def process_single_image(image_path, report_id):
 
     area = box_util.calculate_area(nearest_box) if nearest_box is not None else None
     stack_count = box_util.get_stack_count(record, area)
-    sticker_count = box_util.check_unique_id_count(image, nearest_box, matching_unique_id)
+    sticker_count = box_util.check_unique_id_count(annotated_img, nearest_box, image_path)
 
     bucketer.categorize_and_bucket(annotated_img, image_name, matching_unique_id, record, stack_count, sticker_count)
     
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     image_dir = CONFIG['input']['image_dir']
     images = sorted(os.listdir(image_dir))
     report_id = 0
-    report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_06')
+    report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_07')
     
     for image in images:
         # if int(image[5:8]) < 871:
