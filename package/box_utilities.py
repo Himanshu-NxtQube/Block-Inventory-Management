@@ -210,6 +210,9 @@ class BoxUtilities:
             confs = result.obb.conf
             classes = result.obb.cls
 
+            if conf < 0.7:
+                continue
+
             for corners, conf, cls in zip(boxes, confs, classes):
                 pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
                 
