@@ -23,7 +23,7 @@ class BoxUtilities:
         exceptions = ['1203ES200181N', '1203ES200211N', '1203ES200201N', '1203ES200191N', '609AAA00821N', '1803AS200471N','2301ES200791N','2301AS207141N','1106AAA02641N','2301AS207151N','2301AS207141N','2301AS207131N','1106AAA02641A','2301ES200791N','1106AAA02641A','101EW503850N','203AAR16871N','101EW504250N','1805AAA01291N']
         # for record in records:
         part_number = record['part_number']
-        if part_number[0] == '0':
+        if len(part_number) > 0 and part_number[0] == '0':
             part_number = part_number[1:]
         if part_number in exceptions:
             print("Found exception", record['part_number'])
