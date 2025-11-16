@@ -210,7 +210,7 @@ class BoxUtilities:
             confs = result.obb.conf
             classes = result.obb.cls
 
-            if conf < 0.7:
+            if confs < 0.7:
                 continue
 
             for corners, conf, cls in zip(boxes, confs, classes):
