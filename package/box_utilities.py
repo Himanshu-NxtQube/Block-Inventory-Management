@@ -5,7 +5,7 @@ import os
 import torch
 import pandas as pd
 import matplotlib.pyplot as plt
-from ultralytics.utils.ops import xyxyxyxy2xywhr, obb_iou
+from shapely.geometry import Polygon
 
 class BoxUtilities:
     def __init__(self):
@@ -198,40 +198,56 @@ class BoxUtilities:
     #     area_of_nearest = self.calculate_area(nearest_box)
     #     return area_of_nearest
 
+
+
+    def polygon_iou(self,poly1_pts, poly2_pts):
+        """Compute IoU between two oriented bounding boxes."""
+        poly1 = Polygon(poly1_pts.reshape(-1, 2))
+        poly2 = Polygon(poly2_pts.reshape(-1, 2))
+
+        if not poly1.is_valid or not poly2.is_valid:
+            return 0.0
+
+        inter = poly1.intersection(poly2).area
+        union = poly1.union(poly2).area
+
+        if union == 0:
+            return 0.0
+        return inter / union
+
+
     def check_unique_id_count(self, image, nearest_box, matching_unique_id, iou_threshold=0.1):
         preds = self.sticker_model.predict(image, verbose=False)
         sticker_count = 0
 
-        # Convert nearest_box (numpy 8 points) → torch OBB format
-        nearest_box_pts = torch.tensor(nearest_box, dtype=torch.float32).reshape(1, 8)
-        nearest_box_obb = xyxyxyxy2xywhr(nearest_box_pts)   # → [xc, yc, w, h, angle]
+        nearest_poly = np.array(nearest_box).reshape(-1, 2)
 
         for result in preds:
-            boxes = result.obb.xyxyxyxy  # (N, 8)
+            boxes = result.obb.xyxyxyxy
 
-            # Convert all predicted boxes to OBB format
-            boxes_obb = xyxyxyxy2xywhr(boxes)
+            for corners in boxes:
+                pts = corners.cpu().numpy().astype(int)
+                pts_poly = pts.reshape(-1, 2)
 
-            # Compute IoU with nearest box
-            ious = obb_iou(boxes_obb, nearest_box_obb)  # (N,1)
+                # ---- Apply IoU ----
+                iou = self.polygon_iou(pts_poly, nearest_poly)
+                if iou >= iou_threshold:
+                    sticker_count += 1
 
-            # Count stickers with IoU above threshold
-            sticker_count += int((ious[:, 0] >= iou_threshold).sum().item())
-
-        # ---- Drawing for debugging ----
+        # ---- Draw polygons for visualization ----
         for result in preds:
             boxes = result.obb.xyxyxyxy
 
             for corners in boxes:
                 pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
 
-                box_obb = xyxyxyxy2xywhr(corners.reshape(1, 8))
-                iou = obb_iou(box_obb, nearest_box_obb)[0][0].item()
+                iou = self.polygon_iou(pts.reshape(-1, 2), nearest_poly)
 
                 color = (0, 255, 0) if iou >= iou_threshold else (0, 0, 255)
                 cv2.polylines(image, [pts], True, color, 5)
 
         return sticker_count
+
         
 
 
