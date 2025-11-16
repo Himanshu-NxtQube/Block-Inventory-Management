@@ -99,7 +99,7 @@ if __name__ == "__main__":
     report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_06')
     
     for image in images:
-        # if image[5:8] != '874':
+        # if int(image[5:8]) < 871:
         #     continue
         full_image_path = os.path.join(image_dir, image)
         process_single_image(full_image_path, report_id)

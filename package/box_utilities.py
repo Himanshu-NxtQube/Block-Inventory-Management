@@ -2,15 +2,17 @@ import cv2
 from ultralytics import YOLO
 import numpy as np
 import os
+import torch
 import pandas as pd
 import matplotlib.pyplot as plt
+from ultralytics.utils.ops import xyxyxyxy2xywhr, obb_iou
 
 class BoxUtilities:
     def __init__(self):
         self.box_model = YOLO('models/block_box_latesssssssssstttttt.pt')
         self.stack_count_csv = pd.read_csv('inventory data/block_main_csv.csv', index_col='Part number')
         self.stack_count_csv = self.stack_count_csv[~self.stack_count_csv.index.duplicated(keep='first')]
-        self.sticker_model = YOLO('models/block_sticker.pt')
+        self.sticker_model = YOLO('models/sticker_block_latest.pt')
 
     def get_stack_count(self, record, area):
         if not record:
@@ -196,36 +198,38 @@ class BoxUtilities:
     #     area_of_nearest = self.calculate_area(nearest_box)
     #     return area_of_nearest
 
-    def check_unique_id_count(self, image, nearest_box, matching_unique_id):
+    def check_unique_id_count(self, image, nearest_box, matching_unique_id, iou_threshold=0.1):
         preds = self.sticker_model.predict(image, verbose=False)
         sticker_count = 0
 
+        # Convert nearest_box (numpy 8 points) → torch OBB format
+        nearest_box_pts = torch.tensor(nearest_box, dtype=torch.float32).reshape(1, 8)
+        nearest_box_obb = xyxyxyxy2xywhr(nearest_box_pts)   # → [xc, yc, w, h, angle]
+
+        for result in preds:
+            boxes = result.obb.xyxyxyxy  # (N, 8)
+
+            # Convert all predicted boxes to OBB format
+            boxes_obb = xyxyxyxy2xywhr(boxes)
+
+            # Compute IoU with nearest box
+            ious = obb_iou(boxes_obb, nearest_box_obb)  # (N,1)
+
+            # Count stickers with IoU above threshold
+            sticker_count += int((ious[:, 0] >= iou_threshold).sum().item())
+
+        # ---- Drawing for debugging ----
         for result in preds:
             boxes = result.obb.xyxyxyxy
-            confs = result.obb.conf
-            classes = result.obb.cls
 
-            for corners, conf, cls in zip(boxes, confs, classes):
-                pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
-                
-                # Calculate centroid of the bounding box
-                M = cv2.moments(pts)
-                if M["m00"] != 0:
-                    cx = int(M["m10"] / M["m00"])
-                    cy = int(M["m01"] / M["m00"])
-                else:
-                    continue  # skip invalid boxes
-
-                result = cv2.pointPolygonTest(nearest_box, (cx, cy), False)
-                if result >= 0:
-                    sticker_count += 1
-        
-        for result in preds:
-            boxes = result.obb.xyxyxyxy
             for corners in boxes:
                 pts = corners.cpu().numpy().astype(int).reshape((-1, 1, 2))
-                color = (0, 255, 0) if np.array_equal(pts, nearest_box) else (0, 0, 255)
-                cv2.polylines(image, [pts], isClosed=True, color=color, thickness=5)
+
+                box_obb = xyxyxyxy2xywhr(corners.reshape(1, 8))
+                iou = obb_iou(box_obb, nearest_box_obb)[0][0].item()
+
+                color = (0, 255, 0) if iou >= iou_threshold else (0, 0, 255)
+                cv2.polylines(image, [pts], True, color, 5)
 
         return sticker_count
         
