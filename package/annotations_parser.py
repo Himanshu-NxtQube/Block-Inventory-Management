@@ -25,6 +25,8 @@ class AnnotationsParser:
         return None
     
     def get_unique_ids(self, annotations):
+        if not annotations:
+            return []
         unique_ids = []
         is_at = False
         at_coord = None
