@@ -53,11 +53,11 @@ class AnnotationsParser:
                 at_coord = coord
                 continue
 
-            if regex.match(self.pattern, text):   # normal IDs
-                unique_ids.append((text, coord))
+            if regex.match(self.pattern, text[:7]):   # normal IDs
+                unique_ids.append((text[:7], coord))
 
             if is_at:  # case: '@' + text
-                combined = '@' + text
+                combined = '@' + text[:6]
                 if regex.match(self.pattern, combined):
                     # pick average of @ and ID coordinate if both exist
                     if at_coord and coord:

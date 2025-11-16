@@ -44,7 +44,7 @@ def process_single_image(image_path, report_id):
     global curr_location
     image_name = image_path.split('/')[-1]
     print("Processing: ", image_name)
-    # image_obj_key_id = rds_operator.store_img_info(image_path, conn)
+    image_obj_key_id = rds_operator.store_img_info(image_path, conn)
 
     #matching_unique_ids = set()
     nearest_box = None
@@ -59,7 +59,8 @@ def process_single_image(image_path, report_id):
         return
 
     while not matching_unique_id and rotation < 360:
-        nearest_box = box_util.get_nearest_box(image_path, image.copy(), rotation, debug)
+        annotated_img = image.copy()
+        nearest_box = box_util.get_nearest_box(image_path, annotated_img, rotation, debug)
         if nearest_box is not None:
             cropped_img = box_util.crop_rotated_box(image_path, image.copy(), nearest_box)
             annotations = ocr_client.get_annotations(cropped_img)
@@ -82,12 +83,12 @@ def process_single_image(image_path, report_id):
     stack_count = box_util.get_stack_count(record, area)
     sticker_count = box_util.check_unique_id_count(image, nearest_box, matching_unique_id)
 
-    bucketer.categorize_and_bucket(image, image_name, matching_unique_id, record, stack_count, sticker_count)
+    bucketer.categorize_and_bucket(annotated_img, image_name, matching_unique_id, record, stack_count, sticker_count)
     
     result = build_result(image_name, record, stack_count, curr_location, sticker_count)
     print(json.dumps(result, indent=4))
 
-    # rds_operator.store_data_to_RDS(conn, result, image_obj_key_id, user_id, report_id)
+    rds_operator.store_data_to_RDS(conn, result, image_obj_key_id, user_id, report_id)
 
 
 
@@ -95,8 +96,10 @@ if __name__ == "__main__":
     image_dir = CONFIG['input']['image_dir']
     images = sorted(os.listdir(image_dir))
     report_id = 0
-    # report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_05')
+    report_id = rds_operator.create_report(conn, user_id, report_name='testing_block_06')
     
     for image in images:
+        # if image[5:8] != '874':
+        #     continue
         full_image_path = os.path.join(image_dir, image)
         process_single_image(full_image_path, report_id)
